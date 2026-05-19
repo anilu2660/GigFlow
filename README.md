@@ -1,6 +1,6 @@
 # 🚀 Gigflow Smart Leads Dashboard
 
-A production-ready, full-stack **Smart Leads Management Dashboard** built with the **MERN stack** and **TypeScript**. Designed for sales teams to manage leads efficiently — with role-based access control, real-time filtering, CSV export, and a polished responsive UI.
+A production-ready, full-stack **Smart Leads Management Dashboard** built with the **MERN stack** and **TypeScript**. Designed for sales teams to manage leads efficiently with role-based access control, real-time filtering, CSV export, and a polished responsive UI.
 
 ---
 
