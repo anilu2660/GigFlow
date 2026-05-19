@@ -9,9 +9,15 @@ const app_1 = __importDefault(require("./app"));
 const db_1 = __importDefault(require("./config/db"));
 const PORT = parseInt(process.env.PORT || "5000", 10);
 const startServer = async () => {
-    await (0, db_1.default)();
-    app_1.default.listen(PORT, '0.0.0.0', () => {
+    const server = app_1.default.listen(PORT, "0.0.0.0", () => {
         console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
     });
+    try {
+        await (0, db_1.default)();
+    }
+    catch (error) {
+        console.error(`Server startup failed: ${error?.message || error}`);
+        server.close(() => process.exit(1));
+    }
 };
 startServer();

@@ -6,16 +6,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 const connectDB = async () => {
     if (!process.env.MONGO_URI) {
-        console.error("FATAL: MONGO_URI environment variable is not set.");
-        process.exit(1);
+        throw new Error("FATAL: MONGO_URI environment variable is not set.");
     }
     try {
         const conn = await mongoose_1.default.connect(process.env.MONGO_URI);
         console.log(`MongoDB Connected: ${conn.connection.host}`);
     }
     catch (error) {
-        console.error(`MongoDB Connection Error: ${error.message}`);
-        process.exit(1);
+        throw new Error(`MongoDB Connection Error: ${error.message}`);
     }
 };
 exports.default = connectDB;
