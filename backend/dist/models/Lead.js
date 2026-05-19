@@ -51,7 +51,6 @@ const leadSchema = new mongoose_1.Schema({
     createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
 }, { timestamps: true });
 // Indexes
-leadSchema.index({ email: 1 });
 leadSchema.index({ status: 1 });
 leadSchema.index({ source: 1 });
 exports.default = mongoose_1.default.model("Lead", leadSchema);

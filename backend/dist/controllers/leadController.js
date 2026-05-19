@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.exportCSV = exports.deleteLead = exports.updateLead = exports.getLeadById = exports.getLeads = exports.createLead = void 0;
+exports.getDashboardStats = exports.exportCSV = exports.deleteLead = exports.updateLead = exports.getLeadById = exports.getLeads = exports.createLead = void 0;
 const Lead_1 = __importDefault(require("../models/Lead"));
 const json2csv_1 = require("json2csv");
 const createLead = async (req, res) => {
@@ -143,10 +143,13 @@ const deleteLead = async (req, res) => {
             res.status(404).json({ success: false, message: "Lead not found" });
             return;
         }
-        // Only admin can delete (handled by authorizeRoles in routes, but just in case)
-        if (req.user?.role !== "admin") {
-            res.status(403).json({ success: false, message: "Only admins can delete leads" });
-            return;
+        if (req.user?.role === "sales") {
+            const isOwner = lead.createdBy.toString() === req.user._id.toString();
+            const isAssigned = lead.assignedTo?.toString() === req.user._id.toString();
+            if (!isOwner && !isAssigned) {
+                res.status(403).json({ success: false, message: "Not authorized to delete this lead" });
+                return;
+            }
         }
         await lead.deleteOne();
         res.status(200).json({ success: true, message: "Lead deleted successfully" });
@@ -175,3 +178,40 @@ const exportCSV = async (req, res) => {
     }
 };
 exports.exportCSV = exportCSV;
+const getDashboardStats = async (req, res) => {
+    try {
+        const matchStage = {};
+        if (req.user?.role === "sales") {
+            matchStage.$or = [{ assignedTo: req.user._id }, { createdBy: req.user._id }];
+        }
+        const totalLeads = await Lead_1.default.countDocuments(matchStage);
+        const newLeads = await Lead_1.default.countDocuments({ ...matchStage, status: "new" });
+        const qualifiedLeads = await Lead_1.default.countDocuments({ ...matchStage, status: "qualified" });
+        const lostLeads = await Lead_1.default.countDocuments({ ...matchStage, status: "lost" });
+        const statusDistribution = await Lead_1.default.aggregate([
+            { $match: matchStage },
+            { $group: { _id: "$status", count: { $sum: 1 } } },
+            { $project: { name: "$_id", value: "$count", _id: 0 } }
+        ]);
+        const sourceDistribution = await Lead_1.default.aggregate([
+            { $match: matchStage },
+            { $group: { _id: "$source", count: { $sum: 1 } } },
+            { $project: { name: "$_id", value: "$count", _id: 0 } }
+        ]);
+        res.status(200).json({
+            success: true,
+            data: {
+                totalLeads,
+                newLeads,
+                qualifiedLeads,
+                lostLeads,
+                statusDistribution,
+                sourceDistribution
+            }
+        });
+    }
+    catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+exports.getDashboardStats = getDashboardStats;
